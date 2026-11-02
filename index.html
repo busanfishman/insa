@@ -1632,7 +1632,14 @@ function bootMap(){
 let panelInst=null, panelMarker=null;
 function panelWide(){ return $('#map').clientWidth>=640; }
 function markSel(m,on){ const el=m&&m.getElement&&m.getElement(); if(el) el.classList.toggle('sel',on); }
+/* 방문 통계: GoatCounter 스크립트가 있을 때만 보냄. 주소·위치 같은 개인 정보는 보내지 않음 */
+const _sent={};
+function track(path,title){
+  try{ if(_sent[path]) return; _sent[path]=1;
+    if(window.goatcounter && goatcounter.count) goatcounter.count({path, title:title||path, event:true}); }catch(e){}
+}
 function openPanel(i,m){
+  if(i) track('조회/'+i.n, i.n);
   if(!i) return;
   if(panelMarker) markSel(panelMarker,false);
   panelInst=i.n; panelMarker=m;
@@ -1840,7 +1847,7 @@ function renderSaved(){
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('.star'); if(!b) return;
-  const n=b.dataset.n; fav.has(n)?fav.delete(n):fav.add(n); store.set('fav',[...fav]);
+  const n=b.dataset.n; fav.has(n)?fav.delete(n):fav.add(n); store.set('fav',[...fav]); if(fav.has(n)) track('관심/'+n, n);
   document.querySelectorAll('.star').forEach(s=>{if(s.dataset.n===n){s.setAttribute('aria-pressed',fav.has(n))}});
   renderSaved();
 });
@@ -1851,7 +1858,7 @@ function update(){
 }
 document.querySelector('.seg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  S.mode=b.dataset.mode; store.set('mode',S.mode);
+  S.mode=b.dataset.mode; store.set('mode',S.mode); track('직렬/'+(S.mode==='adm'?'교육행정':'시설관리'));
   if(S.mode==='fac'){S.grade.clear();S.pos.clear();S.reason.forEach(r=>{if(r!=='공로연수'&&r!=='정년퇴직')S.reason.delete(r)})}
   update();
 });
@@ -1877,7 +1884,7 @@ $('#chgSum').addEventListener('click',e=>{
 $('#roundBadge').textContent=`2027. 1. 1.자 · ${ROUND.cur} 자료`;
 $('#savedSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  savedView=b.dataset.sv; store.set('savedView',savedView); renderSaved();
+  savedView=b.dataset.sv; store.set('savedView',savedView); renderSaved(); if(savedView==='table') track('기능/비교표');
 });
 $('#copyBtn').addEventListener('click',()=>{
   const t=savedText();
@@ -1916,6 +1923,14 @@ $('#railBtn').addEventListener('click',()=>{
   railOn=!railOn; store.set('rail',railOn); renderRailUi(); syncRail(); kSyncRail();
 });
 renderRailUi();
+document.addEventListener('toggle',e=>{
+  const d=e.target; if(!(d.matches&&d.matches('details.more')&&d.open)) return;
+  const h=d.closest('.card')&&d.closest('.card').querySelector('h3'); if(h) track('조회/'+h.textContent.trim(), h.textContent.trim());
+},true);
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a.kbtn'); if(!a) return;
+  const h=a.closest('.card')&&a.closest('.card').querySelector('h3'); if(h) track('길찾기/'+h.textContent.trim(), h.textContent.trim());
+});
 function route(force){
   const v=force||(location.hash||'#find').slice(1);
   const view=['find','saved','guide'].includes(v)?v:'find';
@@ -2068,7 +2083,7 @@ function setHome(lat, lng, label){
   stopPicking(); $('#homeMsg').textContent = '';
   if(map) map.setView([lat, lng], Math.max(map.getZoom(), 12));
   if(kmap){ kmap.setCenter(KL(lat,lng)); if(kmap.getLevel()>7) kmap.setLevel(7); }
-  renderHome(); update(); loadRoutes();
+  renderHome(); update(); loadRoutes(); track('기능/기준위치');
 }
 function stopPicking(){ picking = false; if(map) map.getContainer().classList.remove('picking'); if(kmap) kmap.setCursor(''); $('#pickBtn').setAttribute('aria-pressed','false'); }
 function renderHome(){
@@ -2170,7 +2185,7 @@ function kGeocode(q, cb){
   });
   $('#homeClear').addEventListener('click', ()=>{ ROUTES = null; $('#routeMsg').textContent=''; S.home = null; S.dist.on = false; store.set('dist', S.dist); renderHome(); update(); });
   const saveTime=()=>{ store.set('time', S.time); update(); };
-  $('#timeOn').addEventListener('change', e=>{ S.time.on = e.target.checked; saveTime(); });
+  $('#timeOn').addEventListener('change', e=>{ S.time.on = e.target.checked; saveTime(); if(S.time.on) track('기능/시간필터'); });
   $('#timeMode').addEventListener('change', e=>{ S.time.mode = e.target.value; saveTime(); });
   $('#timeMin').addEventListener('change', e=>{ S.time.min = +e.target.value; saveTime(); });
   renderHome();
