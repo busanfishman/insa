@@ -5,6 +5,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@700;900&display=swap">
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=f444879c64d26253b7e41a3006c683e4&libraries=clusterer,services&autoload=false"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <style>/* required styles */
@@ -890,7 +891,17 @@ select{background:var(--surface);border:1px solid var(--line);border-radius:8px;
 .locate:hover{border-color:var(--accent);color:var(--accent)}
 .homep{display:grid;gap:8px}
 .homep h2,.homep .sub{margin:0}
-.homerow{display:flex;gap:6px}
+.homerow{display:flex;gap:6px;position:relative}
+.homesug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;list-style:none;margin:0;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgb(0 0 0 / .16);max-height:300px;overflow:auto}
+.homesug button{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 9px;border-radius:6px;font-size:13.5px}
+.homesug button:hover,.homesug button:focus-visible{background:var(--sunk)}
+.homesug small{display:block;color:var(--muted);font-size:12px}
+.homeacts{display:flex;flex-wrap:wrap;gap:6px}
+.addrmodal{position:fixed;inset:0;z-index:3000;background:rgb(0 0 0 / .45);display:grid;place-items:center;padding:16px}
+.addrbox{width:min(520px,100%);height:min(600px,88vh);background:var(--surface);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 30px rgb(0 0 0 / .3)}
+.addrhead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line)}
+.addrhead .mpclose{float:none;margin:0;position:static}
+#addrEmbed{flex:1;min-height:0}
 .homerow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--surface)}
 .homerow input:focus{border-color:var(--accent);outline:none}
 .chip.pick{justify-self:start}
@@ -1068,18 +1079,14 @@ footer p{margin:.2em 0;max-width:80ch}
           <div class="homerow">
             <input id="homeInput" type="text" placeholder="예: 부산광역시 연제구 중앙대로 1001" aria-label="기준으로 삼을 도로명주소" autocomplete="off">
             <button type="button" class="btn" id="homeGo">찾기</button>
+            <ul class="homesug" id="homeSug" role="listbox" hidden></ul>
           </div>
-          <button type="button" class="chip pick" id="pickBtn" aria-pressed="false">지도에서 직접 찍기</button>
+          <div class="homeacts">
+            <button type="button" class="chip pick" id="addrBtn" hidden>주소 찾기</button>
+            <button type="button" class="chip pick" id="pickBtn" aria-pressed="false">지도에서 직접 찍기</button>
+          </div>
           <p class="homenow">기준 위치: <b id="homeLabel">아직 정하지 않았어요</b> <button type="button" class="linkbtn" id="homeClear" hidden>지우기</button></p>
           <p class="homemsg" id="homeMsg" role="status"></p>
-          <div class="distrow">
-            <label class="chk"><input type="checkbox" id="distOn" disabled> 거리 안의 기관만 보기</label>
-            <div class="distin">
-              <select id="distMode" aria-label="거리 기준"><option value="line">직선거리</option><option value="car">차량거리(추정)</option></select>
-              <input id="distKm" type="number" min="1" max="60" step="1" value="10" aria-label="거리(km)"><span>km 이내</span>
-            </div>
-            <p class="note">차량거리는 직선거리×1.3으로 어림한 값이에요. 실제 경로는 카드의 "길찾기"로 확인하세요.</p>
-          </div>
           <div class="distrow">
             <label class="chk"><input type="checkbox" id="timeOn" disabled> 시간 안의 기관만 보기</label>
             <div class="distin">
@@ -1198,6 +1205,12 @@ footer p{margin:.2em 0;max-width:80ch}
   </section>
 </main>
 
+<div class="addrmodal" id="addrModal" hidden role="dialog" aria-label="주소 찾기">
+  <div class="addrbox">
+    <div class="addrhead"><b>주소 찾기</b><button type="button" class="mpclose" id="addrClose" aria-label="닫기">&times;</button></div>
+    <div id="addrEmbed"></div>
+  </div>
+</div>
 <footer>
   <div class="wrap">
     <p>원자료: 부산광역시교육청 「[1차] 2027. 1. 1.자 6급 이하 전보대상 기관 현황」 (교육행정·사무운영 / 시설관리·건축운영·기계운영). 교육청 공식 서비스가 아닌 개인 참고용 정리본입니다.</p>
@@ -1928,7 +1941,7 @@ $('#heroFac').textContent=DATA.reduce((s,i)=>s+i.fac,0);
 /* ---------- 기준 위치 거리 (저장하지 않음) ---------- */
 const DETOUR = 1.3;
 S.home = null; store.set('home', null);
-S.dist = Object.assign({on:false, km:10, mode:'line'}, store.get('dist', {}));
+S.dist = Object.assign({on:false, km:10, mode:'line'}, store.get('dist', {})); S.dist.on = false;
 S.time = Object.assign({on:false, mode:'car', min:30}, store.get('time', {}));
 let picking = false, homeLayer = null;
 const PLACES = {};
@@ -2033,8 +2046,6 @@ function renderHome(){
   renderDirect();
   $('#homeLabel').textContent = S.home ? S.home.label : '아직 정하지 않았어요';
   $('#homeClear').hidden = !S.home;
-  $('#distOn').checked = !!S.dist.on; $('#distOn').disabled = !S.home;
-  $('#distKm').value = S.dist.km; $('#distMode').value = S.dist.mode;
   $('#timeOn').checked = !!S.time.on; $('#timeOn').disabled = !S.home;
   $('#timeMode').value = S.time.mode; $('#timeMin').value = String(S.time.min);
 }
@@ -2083,6 +2094,44 @@ function kGeocode(q, cb){
     $('#homeMsg').className='homemsg'; $('#homeMsg').textContent = '주소를 찾지 못했어요. "구 + 도로명 + 건물번호"(예: 연제구 중앙대로 1001)로 넣거나, 지도에서 직접 찍어 주세요.';
   };
   $('#homeGo').addEventListener('click', go);
+  /* 주소 찾기 창 (다음 우편번호 서비스, 불러올 수 있을 때만) */
+  if(window.daum && daum.Postcode){
+    $('#addrBtn').hidden = false;
+    const close = ()=>{ $('#addrModal').hidden = true; $('#addrEmbed').innerHTML=''; };
+    $('#addrBtn').addEventListener('click', ()=>{
+      $('#addrModal').hidden = false;
+      new daum.Postcode({ width:'100%', height:'100%', oncomplete: d=>{
+        $('#homeInput').value = d.roadAddress || d.jibunAddress || d.address; close(); go(); } }).embed($('#addrEmbed'));
+    });
+    $('#addrClose').addEventListener('click', close);
+    $('#addrModal').addEventListener('click', e=>{ if(e.target.id==='addrModal') close(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#addrModal').hidden) close(); });
+  }
+  /* 입력하는 동안 카카오 장소 추천 */
+  const sug = $('#homeSug'); let sugT = null, sugSeq = 0;
+  const hideSug = ()=>{ sug.hidden = true; sug.innerHTML = ''; };
+  $('#homeInput').addEventListener('input', ()=>{
+    clearTimeout(sugT); const q = $('#homeInput').value.trim();
+    if(!(KM && window.kakao && kakao.maps.services) || q.length < 2){ hideSug(); return; }
+    sugT = setTimeout(()=>{
+      const my = ++sugSeq;
+      try{ new kakao.maps.services.Places().keywordSearch(q, (pl, st)=>{
+        if(my !== sugSeq || $('#homeInput').value.trim() !== q) return;
+        if(st !== kakao.maps.services.Status.OK || !pl.length){ hideSug(); return; }
+        sug._pl = pl.slice(0, 6);
+        sug.innerHTML = sug._pl.map((r,k)=>`<li><button type="button" data-k="${k}"><b>${esc(r.place_name)}</b><small>${esc(r.road_address_name || r.address_name)}</small></button></li>`).join('');
+        sug.hidden = false;
+      }, {size:6}); }catch(e){ hideSug(); }
+    }, 250);
+  });
+  sug.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    const r = sug._pl[+b.dataset.k]; $('#homeInput').value = r.place_name; hideSug();
+    setHome(+r.y, +r.x, `${r.place_name} (${r.road_address_name || r.address_name})`);
+    $('#homeMsg').className = 'homemsg ok'; $('#homeMsg').textContent = '추천 목록에서 고른 위치예요.';
+  });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.homerow')) hideSug(); });
+  $('#homeInput').addEventListener('keydown', e=>{ if(e.key==='Escape' || e.key==='Enter') hideSug(); });
   $('#homeInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
   $('#pickBtn').addEventListener('click', ()=>{
     if(!map && !kmap){ $('#homeMsg').textContent='지도를 불러오지 못해 직접 찍기를 쓸 수 없어요.'; return; }
@@ -2092,9 +2141,6 @@ function kGeocode(q, cb){
     if(picking) $('#map').scrollIntoView({behavior:'smooth', block:'center'});
   });
   $('#homeClear').addEventListener('click', ()=>{ S.home = null; S.dist.on = false; store.set('dist', S.dist); renderHome(); update(); });
-  $('#distOn').addEventListener('change', e=>{ S.dist.on = e.target.checked; saveDist(); });
-  $('#distKm').addEventListener('input', e=>{ const v = parseFloat(e.target.value); if(v>0){ S.dist.km = v; saveDist(); } });
-  $('#distMode').addEventListener('change', e=>{ S.dist.mode = e.target.value; saveDist(); });
   const saveTime=()=>{ store.set('time', S.time); update(); };
   $('#timeOn').addEventListener('change', e=>{ S.time.on = e.target.checked; saveTime(); });
   $('#timeMode').addEventListener('change', e=>{ S.time.mode = e.target.value; saveTime(); });
