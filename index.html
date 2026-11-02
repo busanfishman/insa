@@ -721,13 +721,13 @@ button{cursor:pointer}
 /* header */
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:8px;font-weight:700;text-decoration:none;color:var(--ink);font-size:20px}
-.brand svg{flex:none;width:42px;height:36px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none;color:var(--ink);font-size:clamp(21px,5.6vw,25px);letter-spacing:-.01em}
+.brand svg{flex:none;width:50px;height:43px}
 nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 nav.tabs a{padding:6px 12px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500;font-size:14px}
 nav.tabs a[aria-current="page"]{background:var(--ink);color:var(--surface)}
 nav.tabs a .cnt{font-family:var(--f-data);margin-left:4px}
-.credit{font-size:15px;color:var(--muted);white-space:nowrap;margin-left:-4px;letter-spacing:.01em}
+.credit{font-size:clamp(15px,4vw,17px);color:var(--muted);white-space:nowrap;margin-left:-4px;letter-spacing:.01em}
 .credit b{color:var(--ink);font-weight:700}
 .badge{font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);white-space:nowrap}
 
