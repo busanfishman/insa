@@ -966,6 +966,8 @@ table.cmp .cslot small{display:inline;font-weight:400;margin:0}
 table.cmp .flag{display:inline-block;margin:0 4px 4px 0}
 table.cmp td.best{background:var(--ok-soft)}
 table.cmp td em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--ok);margin-top:2px}
+.routemsg{margin:0;color:var(--ok)}
+.routemsg:empty{display:none}
 .ttime{margin:0;font-size:12.5px;color:var(--muted)}
 .ttime b{color:var(--ink)}
 .ttime .tk{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:5px;background:var(--sunk);color:var(--muted);margin-right:6px}
@@ -1076,7 +1078,7 @@ footer p{margin:.2em 0;max-width:80ch}
       <aside class="side">
         <div class="panel homep">
           <h2>주소 기준으로 찾기</h2>
-          <p class="sub">도로명주소를 넣으면 그 위치를 기준으로 거리를 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 어디에도 저장되지 않아요.</p>
+          <p class="sub">도로명주소를 넣으면 그 위치를 기준으로 거리와 예상 시간을 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 이 페이지에 저장되지 않지만, 길 계산을 위해 위치 좌표가 경로 계산 서버로 전달돼요.</p>
           <div class="homerow">
             <input id="homeInput" type="text" placeholder="예: 부산광역시 연제구 중앙대로 1001" aria-label="기준으로 삼을 도로명주소" autocomplete="off">
             <button type="button" class="btn" id="homeGo">찾기</button>
@@ -1088,13 +1090,14 @@ footer p{margin:.2em 0;max-width:80ch}
           </div>
           <p class="homenow">기준 위치: <b id="homeLabel">아직 정하지 않았어요</b> <button type="button" class="linkbtn" id="homeClear" hidden>지우기</button></p>
           <p class="homemsg" id="homeMsg" role="status"></p>
+          <p class="note routemsg" id="routeMsg" role="status"></p>
           <div class="distrow">
             <label class="chk"><input type="checkbox" id="timeOn" disabled> 시간 안의 기관만 보기</label>
             <div class="distin">
               <select id="timeMode" aria-label="이동 수단"><option value="car">자동차</option><option value="pt">대중교통</option><option value="walk">도보</option></select>
               <select id="timeMin" aria-label="소요시간"><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="40">40분</option><option value="50">50분</option><option value="60">60분</option><option value="90">90분</option></select><span>이내</span>
             </div>
-            <p class="note">예상 시간은 직선거리에 우회율과 평균 속도를 적용한 어림값이에요. 도보는 분속 70m(시속 약 4km)로 잡았어요. 대중교통은 같은 지하철 노선이면 역 개수로, 같은 버스가 다니면 버스 속도로, 아니면 환승 시간을 더해 계산해요. 실제 시간은 카드의 "길찾기"로 확인하세요.</p>
+            <p class="note">자동차·도보 시간은 OpenStreetMap 도로를 따라 계산해서 산이나 터널도 반영해요. 자동차는 신호·체증을 감안해 30% 더 잡았고, 도보는 분속 70m(시속 약 4km)로 잡았어요. 도로 계산을 못 불러오면 직선거리 어림값으로 보여요. 대중교통은 같은 지하철 노선이면 역 개수로, 같은 버스가 다니면 버스 속도로, 아니면 환승 시간을 더해 계산해요. 실제 시간은 카드의 "길찾기"로 확인하세요.</p>
           </div>
           <div class="distrow">
             <span class="chk">환승 없이 가는 곳만 보기</span>
@@ -1215,7 +1218,7 @@ footer p{margin:.2em 0;max-width:80ch}
 <footer>
   <div class="wrap">
     <p>원자료: 부산광역시교육청 「[1차] 2027. 1. 1.자 6급 이하 전보대상 기관 현황」 (교육행정·사무운영 / 시설관리·건축운영·기계운영). 교육청 공식 서비스가 아닌 개인 참고용 정리본입니다.</p>
-    <p>학교 위치: 공공데이터포털 「전국초중등학교위치표준데이터」(2026. 10. 1. 기준). 이 자료에 없는 특수학교·유치원·도서관·직속기관 등 31곳은 카카오맵 장소 검색으로 확인한 좌표입니다. 학급수·개교일·학생·교원수·학교회계 결산: 학교알리미 공시자료. 학급수는 「학년별·학급별 학생수」 2026학년도 공시(특수학급 포함, 유치원·도서관·직속기관 제외). 도시철도역: 국가철도공단 「전국도시철도역사정보표준데이터」(2026. 6. 30. 기준, 부산 1~4호선·동해선·부산김해경전철). 버스 정류장: 부산광역시 버스정보시스템 Open API(2026. 11. 2. 조회). 역·정류장 거리는 직선거리이고, 도보 시간은 직선거리×1.3을 분속 70m로 나눈 어림값입니다. 맞은편 정류장처럼 이름이 같은 정류장은 1곳으로 셌습니다. 버스 노선: 부산광역시 버스정보시스템 Open API(2026. 11. 2. 조회, 시내·급행·심야·마을버스 290개 노선). 반경 300m 안 정류장에 서는 노선을 모았으며, 실제 운행은 부산버스 앱으로 확인하세요. 남녀공학 구분: NEIS 교육정보 개방포털 「학교기본정보」(2026. 11. 2. 내려받음). 구·군 경계: 통계청 2018 행정구역(southkorea-maps). 바탕지도: © OpenStreetMap contributors. "카카오맵"·"길찾기" 버튼은 카카오맵 사이트를 새 탭으로 엽니다.</p>
+    <p>학교 위치: 공공데이터포털 「전국초중등학교위치표준데이터」(2026. 10. 1. 기준). 이 자료에 없는 특수학교·유치원·도서관·직속기관 등 31곳은 카카오맵 장소 검색으로 확인한 좌표입니다. 학급수·개교일·학생·교원수·학교회계 결산: 학교알리미 공시자료. 학급수는 「학년별·학급별 학생수」 2026학년도 공시(특수학급 포함, 유치원·도서관·직속기관 제외). 도시철도역: 국가철도공단 「전국도시철도역사정보표준데이터」(2026. 6. 30. 기준, 부산 1~4호선·동해선·부산김해경전철). 버스 정류장: 부산광역시 버스정보시스템 Open API(2026. 11. 2. 조회). 역·정류장 거리는 직선거리이고, 도보 시간은 직선거리×1.3을 분속 70m로 나눈 어림값입니다. 맞은편 정류장처럼 이름이 같은 정류장은 1곳으로 셌습니다. 버스 노선: 부산광역시 버스정보시스템 Open API(2026. 11. 2. 조회, 시내·급행·심야·마을버스 290개 노선). 반경 300m 안 정류장에 서는 노선을 모았으며, 실제 운행은 부산버스 앱으로 확인하세요. 남녀공학 구분: NEIS 교육정보 개방포털 「학교기본정보」(2026. 11. 2. 내려받음). 구·군 경계: 통계청 2018 행정구역(southkorea-maps). 바탕지도: © OpenStreetMap contributors. 도로 기준 시간: <a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noopener">FOSSGIS 경로 계산 서버</a>(OSRM, © OpenStreetMap contributors · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">지도 오류 알리기</a>). "카카오맵"·"길찾기" 버튼은 카카오맵 사이트를 새 탭으로 엽니다.</p>
     <p>2차 자료(11. 6.)와 3차 자료(11. 11.)가 나오면 대상 기관이 달라질 수 있으니 전보내신서 제출 전 최종 공문을 꼭 확인하세요.</p>
   </div>
 </footer>
@@ -1573,7 +1576,7 @@ function kInit(){
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&panelInst) closePanel(); });
   ['mousedown','touchstart','wheel','dblclick'].forEach(t=>$('#mapPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
   KM=true; kSyncRail(); setMapNote();
-  if(kakao.maps.services){ $('#homeInput').placeholder='예: 연제구 중앙대로 1001, 사하구 당리동, 사하도서관'; const sub=$('.homep .sub'); if(sub) sub.textContent='전국 주소나 장소 이름을 넣으면 그 위치를 기준으로 거리와 예상 시간을 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 어디에도 저장되지 않아요.'; }
+  if(kakao.maps.services){ $('#homeInput').placeholder='예: 연제구 중앙대로 1001, 사하구 당리동, 사하도서관'; const sub=$('.homep .sub'); if(sub) sub.textContent='주소나 장소 이름을 넣으면 그 위치를 기준으로 거리와 예상 시간을 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 이 페이지에 저장되지 않지만, 검색과 길 계산을 위해 카카오와 경로 계산 서버로 전달돼요.'; }
 }
 function kSyncRail(){
   if(!kmap) return;
@@ -1991,38 +1994,77 @@ function carMin(dkm){
   return road/v*60+3;
 }
 const _tt={};
+/* 실제 도로 기준 계산 (OpenStreetMap 기반 OSRM, FOSSGIS 서버). 안 되면 직선 어림값을 그대로 쓴다. */
+let ROUTES=null;
+const ROUTE_BASE={car:'https://routing.openstreetmap.de/routed-car', walk:'https://routing.openstreetmap.de/routed-foot'};
+function routeOf(i){ return ROUTES && ROUTES.h===S.home && ROUTES.done ? ROUTES.m[i.n] : null; }
+async function loadRoutes(){
+  const h=S.home; if(!h || !window.fetch) return;
+  const dests=DATA.filter(i=>POS[i.n]).map(i=>[i.n,POS[i.n][0],POS[i.n][1]]);
+  const R={h, m:{}, done:false}; ROUTES=R;
+  const msg=$('#routeMsg'); const say=t=>{ if(ROUTES===R && msg) msg.textContent=t; };
+  say('산·터널을 반영한 실제 도로 기준으로 다시 계산하는 중이에요…');
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const CH=80;
+  try{
+    for(const mode of ['car','walk']){
+      for(let k=0;k<dests.length;k+=CH){
+        if(ROUTES!==R) return;
+        const part=dests.slice(k,k+CH);
+        const coords=[[h.lng,h.lat],...part.map(x=>[x[2],x[1]])].map(c=>c[0].toFixed(5)+','+c[1].toFixed(5)).join(';');
+        const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),15000);
+        const res=await fetch(`${ROUTE_BASE[mode]}/table/v1/driving/${coords}?sources=0&annotations=duration,distance`,{signal:ctl.signal});
+        clearTimeout(to);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const j=await res.json(); if(j.code!=='Ok') throw new Error(j.code);
+        part.forEach((x,q)=>{ const o=R.m[x[0]]||(R.m[x[0]]={}); o[mode]=j.durations[0][q+1]; o[mode+'D']=j.distances?j.distances[0][q+1]:null; });
+        await sleep(1100);
+      }
+    }
+    if(ROUTES!==R) return;
+    R.done=true; Object.keys(_tt).forEach(k=>delete _tt[k]);
+    say('실제 도로 기준으로 계산했어요. 교통 체증과 신호는 반영하지 않아요.');
+    update();
+  }catch(e){
+    if(ROUTES===R){ say('도로 기준 계산을 불러오지 못해 직선거리 어림값으로 보여드려요.'); ROUTES=null; }
+  }
+}
 function travel(i){
   const h=homeCtx(); if(!h) return null;
   const p=POS[i.n]; if(!p) return null;
   const k=i.n+'|'+h.h.lat+','+h.h.lng; if(_tt[k]) return _tt[k];
   const d=hav(S.home.lat,S.home.lng,p[0],p[1]);
-  const car=carMin(d);
+  const R=routeOf(i), real=!!(R&&R.car!=null&&R.walkD!=null);
+  const roadKm=R&&R.carD!=null?R.carD/1000:d*DETOUR;
+  const car=R&&R.car!=null?R.car/60*1.3+2:carMin(d);
+  const walk=R&&R.walkD!=null?R.walkD/70:d*1000*DETOUR/70;
   const opts=[];
-  if(d<=1.5) opts.push({m:d*1000*DETOUR/70, how:'걸어서'});
+  if(walk<=25) opts.push({m:walk, how:'걸어서'});
   const il=instLines(i)||{};
   Object.keys(il).forEach(n=>{ const a=h.lines[n]; if(!a) return; const b=il[n];
-    if(a[3]===b[3]){ opts.push({m:(a[1]+b[1])*DETOUR/70, how:'걸어서'}); return; }
+    if(a[3]===b[3]){ opts.push({m:real?walk:(a[1]+b[1])*DETOUR/70, how:'걸어서'}); return; }
     const stops=Math.abs(a[3]-b[3]);
     opts.push({m:(a[1]+b[1])*DETOUR/70 + (WAIT_MIN[n]||WAIT_DEF) + stops*(RIDE_MIN[n]||RIDE_DEF), how:n}); });
   const hl=Object.values(h.lines), ilv=Object.values(il);
   if(hl.length && ilv.length){ const wa=Math.min(...hl.map(x=>x[1])), wb=Math.min(...ilv.map(x=>x[1]));
     opts.push({m:(wa+wb)*DETOUR/70 + 2*WAIT_DEF + 5 + d*1.25/30*60, how:'지하철 환승'}); }
   const t=TR[i.n], bus=t?[...t[3],...t[4]].some(r=>h.routes.has(r)):false;
-  if(bus) opts.push({m:6+7+d*DETOUR/16*60, how:'버스'});
-  opts.push({m:10+12+d*DETOUR/(d>8?22:16)*60, how:'환승'});
+  if(bus) opts.push({m:6+7+roadKm/16*60, how:'버스'});
+  opts.push({m:10+12+roadKm/(roadKm>10?22:16)*60, how:'환승'});
   const best=opts.reduce((x,y)=>y.m<x.m?y:x);
-  return _tt[k]={car, pt:best.m, walk:d*1000*DETOUR/70, how:best.how, d};
+  return _tt[k]={car, pt:best.m, walk, how:best.how, d, roadKm, real};
 }
 function fmtMin(m){ return m<10?`${Math.max(1,Math.round(m))}분`:m<90?`${Math.round(m/5)*5}분`:`${Math.floor(Math.round(m/5)*5/60)}시간 ${Math.round(m/5)*5%60?Math.round(m/5)*5%60+'분':''}`.trim(); }
 function timeHtml(i){
   const t=travel(i); if(!t) return '';
   const how=t.how==='환승'?'환승 1회 이상':t.how==='지하철 환승'?'지하철 환승':t.how==='버스'?'버스 한 번에':t.how==='걸어서'?'걸어서':t.how+' 한 번에';
-  return `<p class="ttime"><span class="tk">예상</span>자동차 <b>약 ${fmtMin(t.car)}</b> · 대중교통 <b>약 ${fmtMin(t.pt)}</b> <small>(${how})</small>${t.walk<=60?` · 도보 <b>약 ${fmtMin(t.walk)}</b>`:''}</p>`;
+  return `<p class="ttime"><span class="tk">${t.real?'도로 기준':'어림'}</span>자동차 <b>약 ${fmtMin(t.car)}</b> · 대중교통 <b>약 ${fmtMin(t.pt)}</b> <small>(${how})</small>${t.walk<=60?` · 도보 <b>약 ${fmtMin(t.walk)}</b>`:''}</p>`;
 }
 function distHtml(i){
   if(!S.home) return ''; const p = POS[i.n]; if(!p) return '';
   const d = lineKm(p);
-  return `<p class="dist"><span>기준 위치에서</span> 직선 <b>${fmtKm(d)}km</b> · 차량 약 <b>${fmtKm(d*DETOUR)}km</b></p>${timeHtml(i)}${directHtml(i)}`;
+  const t = travel(i);
+  return `<p class="dist"><span>기준 위치에서</span> 직선 <b>${fmtKm(d)}km</b> · ${t&&t.real?'도로':'차량 약'} <b>${fmtKm(t?t.roadKm:d*DETOUR)}km</b></p>${timeHtml(i)}${directHtml(i)}`;
 }
 function findPlace(q){
   q = q.trim(); if(!q) return null;
@@ -2037,7 +2079,7 @@ function setHome(lat, lng, label){
   stopPicking(); $('#homeMsg').textContent = '';
   if(map) map.setView([lat, lng], Math.max(map.getZoom(), 12));
   if(kmap){ kmap.setCenter(KL(lat,lng)); if(kmap.getLevel()>7) kmap.setLevel(7); }
-  renderHome(); update();
+  renderHome(); update(); loadRoutes();
 }
 function stopPicking(){ picking = false; if(map) map.getContainer().classList.remove('picking'); if(kmap) kmap.setCursor(''); $('#pickBtn').setAttribute('aria-pressed','false'); }
 function renderDirect(){
@@ -2141,7 +2183,7 @@ function kGeocode(q, cb){
     $('#homeMsg').textContent = picking ? '지도에서 기준으로 삼을 위치를 눌러 주세요.' : '';
     if(picking) $('#map').scrollIntoView({behavior:'smooth', block:'center'});
   });
-  $('#homeClear').addEventListener('click', ()=>{ S.home = null; S.dist.on = false; store.set('dist', S.dist); renderHome(); update(); });
+  $('#homeClear').addEventListener('click', ()=>{ ROUTES = null; $('#routeMsg').textContent=''; S.home = null; S.dist.on = false; store.set('dist', S.dist); renderHome(); update(); });
   const saveTime=()=>{ store.set('time', S.time); update(); };
   $('#timeOn').addEventListener('change', e=>{ S.time.on = e.target.checked; saveTime(); });
   $('#timeMode').addEventListener('change', e=>{ S.time.mode = e.target.value; saveTime(); });
