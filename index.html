@@ -975,7 +975,6 @@ table.cmp td em{display:block;font-style:normal;font-size:11px;font-weight:700;c
 .direct .tk{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:5px;background:var(--ok-soft);color:var(--ok)}
 .direct .dl{display:inline-flex;align-items:center;gap:5px}
 .direct .dl i{width:12px;height:4px;border-radius:2px;display:inline-block}
-#directChips{margin-top:2px}
 .chgsum{background:var(--surface);border:1px solid var(--accent);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;display:grid;gap:10px}
 .chgtop{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .chgtop b{font-size:15px;display:block}
@@ -1098,14 +1097,6 @@ footer p{margin:.2em 0;max-width:80ch}
               <select id="timeMin" aria-label="소요시간"><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="40">40분</option><option value="50">50분</option><option value="60">60분</option><option value="90">90분</option></select><span>이내</span>
             </div>
             <p class="note">자동차·도보 시간은 OpenStreetMap 도로를 따라 계산해서 산이나 터널도 반영해요. 자동차는 신호·체증을 감안해 30% 더 잡았고, 도보는 분속 70m(시속 약 4km)로 잡았어요. 도로 계산을 못 불러오면 직선거리 어림값으로 보여요. 대중교통은 같은 지하철 노선이면 역 개수로, 같은 버스가 다니면 버스 속도로, 아니면 환승 시간을 더해 계산해요. 실제 시간은 카드의 "길찾기"로 확인하세요.</p>
-          </div>
-          <div class="distrow">
-            <span class="chk">환승 없이 가는 곳만 보기</span>
-            <div class="chips" id="directChips">
-              <button type="button" class="chip" data-d="sub" aria-pressed="false" disabled>지하철 한 번에</button>
-              <button type="button" class="chip" data-d="bus" aria-pressed="false" disabled>버스 한 번에</button>
-            </div>
-            <p class="note" id="directNote">기준 위치를 정하면 쓸 수 있어요. 기준 위치 1km 안 역과 기관 1km 안 역이 같은 노선이면 '지하철 한 번에', 기준 위치 400m 안 정류장과 기관 300m 안 정류장에 같은 버스가 서면 '버스 한 번에'로 봐요.</p>
           </div>
         </div>
         <details class="panel filters" id="filterBox" open>
@@ -1397,7 +1388,6 @@ function test(i, skip){
   if (S.closing && i.flags.includes('폐지')) return null;
   if (S.stn && (!TR[i.n] || TR[i.n][1] > +S.stn)) return null;
   if (S.chg && !changed(i)) return null;
-  if (S.home && S.direct.size){ const d=direct(i); if(!d || !((S.direct.has('sub')&&d.sub.length)||(S.direct.has('bus')&&d.bus.length))) return null; }
   if (S.mode==='adm'){
     const m = i.adm.filter(posMatch);
     if (!m.length) return null;
@@ -1877,10 +1867,6 @@ function savedText(){
     return `${k+1}. ${i.n} (${i.o==='본청'?'본청':i.o}·${i.t}) - ${parts.join(' / ')}${fl.length?' ['+fl.join(', ')+']':''}`;
   }).join('\n');
 }
-$('#directChips').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b||b.disabled) return;
-  const v=b.dataset.d; S.direct.has(v)?S.direct.delete(v):S.direct.add(v); renderDirect(); update();
-});
 $('#chgSum').addEventListener('click',e=>{
   if(!e.target.closest('#chgOnly')) return;
   S.chg=!S.chg; update();
@@ -2082,11 +2068,7 @@ function setHome(lat, lng, label){
   renderHome(); update(); loadRoutes();
 }
 function stopPicking(){ picking = false; if(map) map.getContainer().classList.remove('picking'); if(kmap) kmap.setCursor(''); $('#pickBtn').setAttribute('aria-pressed','false'); }
-function renderDirect(){
-  document.querySelectorAll('#directChips .chip').forEach(b=>{ b.disabled=!S.home; b.setAttribute('aria-pressed', !!S.home && S.direct.has(b.dataset.d)); });
-}
 function renderHome(){
-  renderDirect();
   $('#homeLabel').textContent = S.home ? S.home.label : '아직 정하지 않았어요';
   $('#homeClear').hidden = !S.home;
   $('#timeOn').checked = !!S.time.on; $('#timeOn').disabled = !S.home;
