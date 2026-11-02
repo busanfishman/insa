@@ -1090,10 +1090,10 @@ footer p{margin:.2em 0;max-width:80ch}
           <div class="distrow">
             <label class="chk"><input type="checkbox" id="timeOn" disabled> 시간 안의 기관만 보기</label>
             <div class="distin">
-              <select id="timeMode" aria-label="이동 수단"><option value="car">자동차</option><option value="pt">대중교통</option></select>
+              <select id="timeMode" aria-label="이동 수단"><option value="car">자동차</option><option value="pt">대중교통</option><option value="walk">도보</option></select>
               <select id="timeMin" aria-label="소요시간"><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="40">40분</option><option value="50">50분</option><option value="60">60분</option><option value="90">90분</option></select><span>이내</span>
             </div>
-            <p class="note">예상 시간은 직선거리에 우회율과 평균 속도를 적용한 어림값이에요. 대중교통은 같은 지하철 노선이면 역 개수로, 같은 버스가 다니면 버스 속도로, 아니면 환승 시간을 더해 계산해요. 실제 시간은 카드의 "길찾기"로 확인하세요.</p>
+            <p class="note">예상 시간은 직선거리에 우회율과 평균 속도를 적용한 어림값이에요. 도보는 분속 70m(시속 약 4km)로 잡았어요. 대중교통은 같은 지하철 노선이면 역 개수로, 같은 버스가 다니면 버스 속도로, 아니면 환승 시간을 더해 계산해요. 실제 시간은 카드의 "길찾기"로 확인하세요.</p>
           </div>
           <div class="distrow">
             <span class="chk">환승 없이 가는 곳만 보기</span>
@@ -1382,7 +1382,7 @@ function posMatch(p){
 function test(i, skip){
   if (S.mode==='adm' ? !i.adm.length : !i.fac) return null;
   if (S.dist && S.dist.on && S.home){const p=POS[i.n]; if(!p || effKm(p)>S.dist.km) return null;}
-  if (S.time && S.time.on && S.home){const t=travel(i); if(!t || (S.time.mode==='car'?t.car:t.pt)>S.time.min) return null;}
+  if (S.time && S.time.on && S.home){const t=travel(i); if(!t || t[S.time.mode]>S.time.min) return null;}
   if (S.q){const hay=i.n+(i.o==='본청'?'본청':i.o+'교육지원청'+OFFICE_GU[i.o].join(''))+i.t; if(!S.q.split(/\s+/).every(w=>hay.includes(w))) return null;}
   if (skip!=='office' && S.office.size && !S.office.has(i.o)) return null;
   if (skip!=='type' && S.type.size && !S.type.has(i.t)) return null;
@@ -1815,7 +1815,7 @@ function compareHtml(list){
     ['가까운 역', i=>{const t=TR[i.n]; if(!t) return '—'; const s=STN[t[0]]; return t[1]<=2000?`${esc(s[0])} ${fm(t[1])}<small>${esc(s[1])} · 도보 약 ${Math.max(1,Math.round(t[1]*1.3/70))}분</small>`:'2km 넘음';}, {val:i=>TR[i.n]?TR[i.n][1]:null, best:'min', tag:'가장 가까움'}],
     ['버스', i=>{const t=TR[i.n]; if(!t) return '—'; return `노선 ${t[3].length+t[4].length}개<small>시내 ${t[3].length} · 마을 ${t[4].length} · 정류장 ${t[2]}곳</small>`;}, {val:i=>TR[i.n]?TR[i.n][3].length+TR[i.n][4].length:null, best:'max', tag:'가장 많음'}],
   ];
-  if(S.home) rows.push(['예상 시간', i=>{const t=travel(i); if(!t) return '—'; return `자동차 약 ${fmtMin(t.car)}<small>대중교통 약 ${fmtMin(t.pt)} · ${t.how==='환승'?'환승 1회 이상':t.how==='지하철 환승'?'지하철 환승':t.how==='버스'?'버스 한 번에':t.how==='걸어서'?'걸어서':t.how+' 한 번에'}</small>`;}, {val:i=>{const t=travel(i); return t?Math.round(t.pt):null;}, best:'min', tag:'대중교통 가장 빠름'}]);
+  if(S.home) rows.push(['예상 시간', i=>{const t=travel(i); if(!t) return '—'; return `자동차 약 ${fmtMin(t.car)}<small>${t.walk<=60?`도보 약 ${fmtMin(t.walk)}<br>`:''}대중교통 약 ${fmtMin(t.pt)} · ${t.how==='환승'?'환승 1회 이상':t.how==='지하철 환승'?'지하철 환승':t.how==='버스'?'버스 한 번에':t.how==='걸어서'?'걸어서':t.how+' 한 번에'}</small>`;}, {val:i=>{const t=travel(i); return t?Math.round(t.pt):null;}, best:'min', tag:'대중교통 가장 빠름'}]);
   if(S.home) rows.push(['환승 없이', i=>{const d=direct(i); if(!d||(!d.sub.length&&!d.bus.length)) return '—'; return [...d.sub.map(x=>`${esc(x.line)}<small>${x.from===x.to?esc(x.to)+' 생활권':esc(x.from)+' → '+esc(x.to)}</small>`), d.bus.length?`버스 ${d.bus.length}개 노선<small>${d.bus.slice(0,8).map(esc).join(', ')}${d.bus.length>8?' …':''}</small>`:''].filter(Boolean).join('');}]);
   if(S.home) rows.push(['기준 위치에서', i=>{const p=POS[i.n]; if(!p) return '—'; const d=lineKm(p); return `직선 ${fmtKm(d)}km<small>차량 약 ${fmtKm(d*DETOUR)}km</small>`;}, {val:i=>POS[i.n]?lineKm(POS[i.n]):null, best:'min', tag:'가장 가까움'}]);
   const body=rows.map(([label,fn,o={}])=>{
@@ -2010,13 +2010,13 @@ function travel(i){
   if(bus) opts.push({m:6+7+d*DETOUR/16*60, how:'버스'});
   opts.push({m:10+12+d*DETOUR/(d>8?22:16)*60, how:'환승'});
   const best=opts.reduce((x,y)=>y.m<x.m?y:x);
-  return _tt[k]={car, pt:best.m, how:best.how, d};
+  return _tt[k]={car, pt:best.m, walk:d*1000*DETOUR/70, how:best.how, d};
 }
 function fmtMin(m){ return m<10?`${Math.max(1,Math.round(m))}분`:m<90?`${Math.round(m/5)*5}분`:`${Math.floor(Math.round(m/5)*5/60)}시간 ${Math.round(m/5)*5%60?Math.round(m/5)*5%60+'분':''}`.trim(); }
 function timeHtml(i){
   const t=travel(i); if(!t) return '';
   const how=t.how==='환승'?'환승 1회 이상':t.how==='지하철 환승'?'지하철 환승':t.how==='버스'?'버스 한 번에':t.how==='걸어서'?'걸어서':t.how+' 한 번에';
-  return `<p class="ttime"><span class="tk">예상</span>자동차 <b>약 ${fmtMin(t.car)}</b> · 대중교통 <b>약 ${fmtMin(t.pt)}</b> <small>(${how})</small></p>`;
+  return `<p class="ttime"><span class="tk">예상</span>자동차 <b>약 ${fmtMin(t.car)}</b> · 대중교통 <b>약 ${fmtMin(t.pt)}</b> <small>(${how})</small>${t.walk<=60?` · 도보 <b>약 ${fmtMin(t.walk)}</b>`:''}</p>`;
 }
 function distHtml(i){
   if(!S.home) return ''; const p = POS[i.n]; if(!p) return '';
