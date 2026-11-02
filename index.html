@@ -1572,7 +1572,7 @@ function kInit(){
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&panelInst) closePanel(); });
   ['mousedown','touchstart','wheel','dblclick'].forEach(t=>$('#mapPanel').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
   KM=true; kSyncRail(); setMapNote();
-  if(kakao.maps.services){ $('#homeInput').placeholder='예: 수원시 장안구 파장동, 사하구 낙동대로 398, 사하도서관'; const sub=$('.homep .sub'); if(sub) sub.textContent='전국 주소나 장소 이름을 넣으면 그 위치를 기준으로 거리와 예상 시간을 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 어디에도 저장되지 않아요.'; }
+  if(kakao.maps.services){ $('#homeInput').placeholder='예: 연제구 중앙대로 1001, 사하구 당리동, 사하도서관'; const sub=$('.homep .sub'); if(sub) sub.textContent='전국 주소나 장소 이름을 넣으면 그 위치를 기준으로 거리와 예상 시간을 계산해요. 지도에서 직접 찍어도 돼요. 입력한 주소는 어디에도 저장되지 않아요.'; }
 }
 function kSyncRail(){
   if(!kmap) return;
